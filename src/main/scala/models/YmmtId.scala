@@ -1,3 +1,3 @@
 package models
 
-case class YmmtId ()
+case class YmmtId (vin_prefix: String, ymmt_id: String)
