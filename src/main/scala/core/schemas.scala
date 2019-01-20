@@ -14,6 +14,11 @@ object schemas {
     StructField("ymmt_id", StringType, false) :: Nil
   )
   
+  val zipcodeSchema = StructType(
+    StructField("zipcode", StringType, false) ::
+    StructField("state", StringType, false) :: Nil
+  )
+  
   val rawSaleRecordSchema = StructType(
     StructField("vin", StringType, false) ::
     StructField("date", DateType, false) ::

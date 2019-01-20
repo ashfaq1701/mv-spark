@@ -5,6 +5,7 @@ import core.session
 import core.schemas
 import core.globals
 import models.YmmtId
+import models.Zipcode
 import models.RawSaleRecord
 import models.RawSaleRecordWithVinPrefix
 import models.SaleRecord
@@ -23,9 +24,21 @@ object SaleRecords {
       .as[YmmtId]
       ymmtDSToStore.write.saveAsTable("salerecords.ymmt_ids")
     }
+    if (!session.spark.catalog.tableExists("salerecords", "zipcodes")) {
+      val zipcodesDSToStore = session.spark.read
+      .option("header", "true")
+      .schema(schemas.zipcodeSchema)
+      .csv(path + "/zipcodes.csv")
+      .as[Zipcode]
+      zipcodesDSToStore.write.saveAsTable("salerecords.zipcodes")
+    }
     val ymmtDS = session.spark.read
     .table("salerecords.ymmt_ids")
     .as[YmmtId]
+    
+    val zipcodesDS = session.spark.read
+    .table("salerecords.zipcodes")
+    .as[Zipcode]
     
     var mergedDS = session.spark.emptyDataset[RawSaleRecord]
     
@@ -45,10 +58,10 @@ object SaleRecords {
     
     mergedDSWithVinPrefix.createOrReplaceTempView("tmp_salerecords")
     ymmtDS.createOrReplaceTempView("tmp_ymmt_ids")
+    zipcodesDS.createOrReplaceTempView("tmp_zipcodes")
     
-    val joinedDS = session.spark.sql("SELECT tmp_salerecords.*, tmp_ymmt_ids.ymmt_id, concat(year(tmp_salerecords.date), '-', month(tmp_salerecords.date)) AS year_month FROM tmp_salerecords INNER JOIN tmp_ymmt_ids ON tmp_salerecords.vin_prefix = tmp_ymmt_ids.vin_prefix")
+    val joinedDS = session.spark.sql("SELECT tmp_salerecords.*, tmp_ymmt_ids.ymmt_id, tmp_zipcodes.state, concat(year(tmp_salerecords.date), '-', month(tmp_salerecords.date)) AS year_month FROM tmp_salerecords INNER JOIN tmp_ymmt_ids ON tmp_salerecords.vin_prefix = tmp_ymmt_ids.vin_prefix LEFT OUTER JOIN tmp_zipcodes ON tmp_salerecords.zip = tmp_zipcodes.zipcode")
     .as[SaleRecord]
-    //joinedDS.write.mode("append").saveAsTable("salerecords.salerecords")
     joinedDS.write.partitionBy("year_month")
     .mode("append")
     .saveAsTable("salerecords.salerecords")
@@ -63,6 +76,7 @@ object SaleRecords {
     val saleRecordsDS = session.spark.read
     .table("salerecords.salerecords")
     .as[SaleRecord]
+    
   }
   
   def showSaleRecordsCount: Unit = {

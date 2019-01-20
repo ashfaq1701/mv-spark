@@ -1,0 +1,5 @@
+package summaries
+
+object SummaryByState {
+  
+}
