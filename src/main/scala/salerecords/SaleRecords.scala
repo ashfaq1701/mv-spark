@@ -75,6 +75,7 @@ object SaleRecords {
     .table("salerecords.salerecords")
     .as[SaleRecord]
     println(saleRecordsDS.count)
+    saleRecordsDS.show
   }
   
   def deleteTable() : Unit = {
