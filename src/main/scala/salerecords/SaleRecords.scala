@@ -3,12 +3,14 @@ package salerecords
 import core.database
 import core.session
 import core.schemas
+import core.globals
 import models.YmmtId
 import models.RawSaleRecord
 import models.RawSaleRecordWithVinPrefix
 import models.SaleRecord
 import java.io.File
 import org.apache.spark.sql.functions._
+import org.apache.spark.sql.SaveMode
 
 object SaleRecords {
   def importRecords (path : String): Unit = {
@@ -44,10 +46,12 @@ object SaleRecords {
     mergedDSWithVinPrefix.createOrReplaceTempView("tmp_salerecords")
     ymmtDS.createOrReplaceTempView("tmp_ymmt_ids")
     
-    val joinedDS = session.spark.sql("SELECT tmp_salerecords.*, tmp_ymmt_ids.ymmt_id FROM tmp_salerecords INNER JOIN tmp_ymmt_ids ON tmp_salerecords.vin_prefix = tmp_ymmt_ids.vin_prefix")
+    val joinedDS = session.spark.sql("SELECT tmp_salerecords.*, tmp_ymmt_ids.ymmt_id, concat(year(tmp_salerecords.date), '-', month(tmp_salerecords.date)) AS year_month FROM tmp_salerecords INNER JOIN tmp_ymmt_ids ON tmp_salerecords.vin_prefix = tmp_ymmt_ids.vin_prefix")
     .as[SaleRecord]
     //joinedDS.write.mode("append").saveAsTable("salerecords.salerecords")
-    println(joinedDS.count())
+    joinedDS.write.partitionBy("year_month")
+    .mode("append")
+    .saveAsTable("salerecords.salerecords")
   }
   
   def summarizeRecords : Unit = {
@@ -55,14 +59,32 @@ object SaleRecords {
       println("Salerecords table does not exist")
       sys.exit(1)
     }
+    import session.spark.implicits._
+    val saleRecordsDS = session.spark.read
+    .table("salerecords.salerecords")
+    .as[SaleRecord]
   }
   
-  def deleteTable : Unit = {
+  def showSaleRecordsCount: Unit = {
+    if (!session.spark.catalog.tableExists("salerecords", "salerecords")) {
+      println("Salerecords table does not exist")
+      sys.exit(1)
+    }
+    import session.spark.implicits._
+    val saleRecordsDS = session.spark.read
+    .table("salerecords.salerecords")
+    .as[SaleRecord]
+    println(saleRecordsDS.count)
+  }
+  
+  def deleteTable() : Unit = {
     if (session.spark.catalog.tableExists("salerecords", "salerecords")) {
-      session.spark.sql("DROP TABLE salerecords")
+      session.spark.sql("DROP TABLE salerecords.salerecords")
       println("Salerecords table dropped")
     } else {
       println("Salerecords table does not exist")
     }
+    val warehouse = session.spark.conf.get("spark.sql.warehouse.dir").replace("file:", "")
+    globals.deleteFolder(new File(warehouse + "salerecords.db/salerecords"))
   }
 }

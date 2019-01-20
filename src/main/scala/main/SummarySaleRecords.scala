@@ -20,6 +20,8 @@ object SummarySaleRecords {
       SaleRecords.summarizeRecords
     } else if (cmd == "delete") {
       SaleRecords.deleteTable
+    } else if (cmd == "show") {
+      SaleRecords.showSaleRecordsCount
     } else {
       println("Wrong action")
       sys.exit(1)
