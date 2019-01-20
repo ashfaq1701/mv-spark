@@ -12,6 +12,13 @@ import models.SaleRecord
 import java.io.File
 import org.apache.spark.sql.functions._
 import org.apache.spark.sql.SaveMode
+import java.util.Calendar
+import java.sql.Date
+import java.text.SimpleDateFormat
+import java.text.DateFormat
+import summaries.SummaryBase
+import summaries.SummaryByState
+import summaries.SummaryOverTime
 
 object SaleRecords {
   def importRecords (path : String): Unit = {
@@ -60,7 +67,7 @@ object SaleRecords {
     ymmtDS.createOrReplaceTempView("tmp_ymmt_ids")
     zipcodesDS.createOrReplaceTempView("tmp_zipcodes")
     
-    val joinedDS = session.spark.sql("SELECT tmp_salerecords.*, tmp_ymmt_ids.ymmt_id, tmp_zipcodes.state, concat(year(tmp_salerecords.date), '-', month(tmp_salerecords.date)) AS year_month FROM tmp_salerecords INNER JOIN tmp_ymmt_ids ON tmp_salerecords.vin_prefix = tmp_ymmt_ids.vin_prefix LEFT OUTER JOIN tmp_zipcodes ON tmp_salerecords.zip = tmp_zipcodes.zipcode")
+    val joinedDS = session.spark.sql("SELECT tmp_salerecords.*, trim(tmp_ymmt_ids.ymmt_id) as ymmt_id, tmp_zipcodes.state, concat(year(tmp_salerecords.date), '-', month(tmp_salerecords.date)) AS year_month FROM tmp_salerecords INNER JOIN tmp_ymmt_ids ON tmp_salerecords.vin_prefix = tmp_ymmt_ids.vin_prefix LEFT OUTER JOIN tmp_zipcodes ON tmp_salerecords.zip = tmp_zipcodes.zipcode")
     .as[SaleRecord]
     joinedDS.write.partitionBy("year_month")
     .mode("append")
@@ -76,7 +83,15 @@ object SaleRecords {
     val saleRecordsDS = session.spark.read
     .table("salerecords.salerecords")
     .as[SaleRecord]
+    saleRecordsDS.createOrReplaceTempView("tmp_salerecords")
+    val maxSaleDate = session.spark.sql("SELECT max(date) from tmp_salerecords").first.getDate(0)
     
+    val uniqueDS = session.spark.sql("SELECT first(vin) as vin, first(date) as date, first(price) as price, first(miles) as miles, first(zip) as zip, first(ymmt_id) as ymmt_id, first(state) as state, first(year_month) as year_month from tmp_salerecords group by vin, date")
+    .as[SaleRecord]
+    uniqueDS.createOrReplaceTempView("unique_tmp_salerecords")
+    SummaryBase.computeSummaryBase(uniqueDS, maxSaleDate)
+    SummaryByState.computeSummaryByState(uniqueDS, maxSaleDate)
+    SummaryOverTime.computeSummaryOverTime(uniqueDS, maxSaleDate)
   }
   
   def showSaleRecordsCount: Unit = {
