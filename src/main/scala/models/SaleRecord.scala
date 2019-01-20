@@ -1,3 +1,5 @@
 package models
 
-case class SaleRecords ()
+import java.sql.Date
+
+case class SaleRecord (vin: String, date: Date, price: Long, miles: Long, zip: Integer, ymmt_id: String)

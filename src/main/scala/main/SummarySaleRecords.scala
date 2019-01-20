@@ -5,10 +5,24 @@ import org.apache.spark.sql.types.StructType
 import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.types.StringType
-import salerecords.ImportSaleRecords
+import salerecords.SaleRecords
 
 object SummarySaleRecords {
   def main(args: Array[String]): Unit = {
-    ImportSaleRecords.importRecords("/usr/dump_data");
+    if (args.length == 0) {
+      println("You must pass the action to run this application")
+      sys.exit(1)
+    }
+    val cmd = args(0)
+    if (cmd == "import") {
+       SaleRecords.importRecords("/usr/dump_data");
+    } else if (cmd == "summary") {
+      SaleRecords.summarizeRecords
+    } else if (cmd == "delete") {
+      SaleRecords.deleteTable
+    } else {
+      println("Wrong action")
+      sys.exit(1)
+    }
   }
 }
