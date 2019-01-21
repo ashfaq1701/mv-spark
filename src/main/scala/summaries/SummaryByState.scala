@@ -6,6 +6,6 @@ import java.sql.Date
 
 object SummaryByState {
   def computeSummaryByState(dataset: Dataset[SaleRecord], maxSaleDate: Date) : Unit = {
-    
+    dataset.groupBy("ymmt_id", "state")
   }
 }

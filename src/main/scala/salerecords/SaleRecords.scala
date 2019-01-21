@@ -88,10 +88,9 @@ object SaleRecords {
     
     val uniqueDS = session.spark.sql("SELECT first(vin) as vin, first(date) as date, first(price) as price, first(miles) as miles, first(zip) as zip, first(ymmt_id) as ymmt_id, first(state) as state, first(year_month) as year_month from tmp_salerecords group by vin, date")
     .as[SaleRecord]
-    uniqueDS.createOrReplaceTempView("unique_tmp_salerecords")
     SummaryBase.computeSummaryBase(uniqueDS, maxSaleDate)
     SummaryByState.computeSummaryByState(uniqueDS, maxSaleDate)
-    SummaryOverTime.computeSummaryOverTime(uniqueDS, maxSaleDate)
+    SummaryOverTime.computeSummaryOverTime(uniqueDS)
   }
   
   def showSaleRecordsCount: Unit = {
