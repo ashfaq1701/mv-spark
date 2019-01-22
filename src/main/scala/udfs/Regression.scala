@@ -5,7 +5,7 @@ import org.apache.spark.sql.expressions.UserDefinedAggregateFunction
 import org.apache.spark.sql.Row
 import org.apache.spark.sql.types._
 
-class Regression extends UserDefinedAggregateFunction {
+object Regression extends UserDefinedAggregateFunction {
   // This is the input fields for your aggregate function.
   override def inputSchema: org.apache.spark.sql.types.StructType = StructType(
     StructField("col1", LongType) :: 
@@ -40,18 +40,33 @@ class Regression extends UserDefinedAggregateFunction {
 
   // This is how to update your buffer schema given an input.
   override def update(buffer: MutableAggregationBuffer, input: Row): Unit = {
-    buffer(0) = buffer.getAs[Long](0) + 1
-    buffer(1) = buffer.getAs[Double](1) * input.getAs[Double](0)
+    buffer(0) = buffer.getAs[Long](0) + 1L
+    buffer(1) = buffer.getAs[Double](1) + (input.getAs[Long](0).toDouble * input.getAs[Long](1).toDouble)
+    buffer(2) = buffer.getAs[Double](2) + input.getAs[Long](0).toDouble
+    buffer(3) = buffer.getAs[Double](3) + input.getAs[Long](1).toDouble
+    buffer(4) = buffer.getAs[Double](3) + math.pow(input.getAs[Long](0).toDouble, 2)
   }
 
   // This is how to merge two objects with the bufferSchema type.
   override def merge(buffer1: MutableAggregationBuffer, buffer2: Row): Unit = {
     buffer1(0) = buffer1.getAs[Long](0) + buffer2.getAs[Long](0)
-    buffer1(1) = buffer1.getAs[Double](1) * buffer2.getAs[Double](1)
+    buffer1(1) = buffer1.getAs[Double](1) + buffer2.getAs[Double](1)
+    buffer1(2) = buffer1.getAs[Double](2) + buffer2.getAs[Double](2)
+    buffer1(3) = buffer1.getAs[Double](3) + buffer2.getAs[Double](3)
+    buffer1(4) = buffer1.getAs[Double](4) + buffer2.getAs[Double](4)
   }
 
   // This is where you output the final value, given the final value of your bufferSchema.
   override def evaluate(buffer: Row): Any = {
-    Array()
+    val denom = (buffer.getLong(0).toDouble * buffer.getDouble(4)) - math.pow(buffer.getDouble(2), 2)
+    var m = 0.0
+    if (denom != 0.0) {
+      m = ((buffer.getLong(0).toDouble * buffer.getDouble(1)) - (buffer.getDouble(2) * buffer.getDouble(3))) / denom
+    }
+    var b = 0.0
+    if (buffer.getLong(0) != 0L) {
+      b = (buffer.getDouble(3) - m * buffer.getDouble(2)) / buffer.getLong(0).toDouble
+    }
+    (m, b)
   }
 }
