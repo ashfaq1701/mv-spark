@@ -74,7 +74,7 @@ object SaleRecords {
     .saveAsTable("salerecords.salerecords")
   }
   
-  def summarizeRecords : Unit = {
+  def summarizeRecords(outlierDetection: String = "z_score") : Unit = {
     if (!session.spark.catalog.tableExists("salerecords", "salerecords")) {
       println("Salerecords table does not exist")
       sys.exit(1)
@@ -86,10 +86,11 @@ object SaleRecords {
     saleRecordsDS.createOrReplaceTempView("tmp_salerecords")
     val maxSaleDate = session.spark.sql("SELECT max(date) from tmp_salerecords").first.getDate(0)
     val uniqueDS = saleRecordsDS.dropDuplicates("vin", "date")
-    val filteredDS = uniqueDS.filter(col("price") > 0 && col("miles")> 50)    
-    SummaryBase.computeSummaryBase(filteredDS, maxSaleDate)
-    SummaryByState.computeSummaryByState(filteredDS, maxSaleDate)
-    SummaryOverTime.computeSummaryOverTime(filteredDS)
+    val filteredDS = uniqueDS.filter(col("price") > 0 && col("miles")> 50)
+    session.spark.catalog.dropTempView("tmp_salerecords")
+    SummaryBase.computeSummaryBase(filteredDS, maxSaleDate, outlierDetection)
+    SummaryByState.computeSummaryByState(filteredDS, maxSaleDate, outlierDetection)
+    SummaryOverTime.computeSummaryOverTime(filteredDS, outlierDetection)
   }
   
   def showSaleRecordsCount: Unit = {

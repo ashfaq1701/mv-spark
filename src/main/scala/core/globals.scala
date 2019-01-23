@@ -20,4 +20,22 @@ object globals {
     cal.add(Calendar.MONTH, 0 - months)
     df.format(cal.getTime)
   }
+  
+  def colMap(table1: String, table2: String, col: String, cols: String*): String = {
+    var ons = new Array[String](cols.length + 1)
+    ons(0) = table1 + "." + col + " = " + table2 + "." + col
+    for (i <- 0 until cols.length) {
+      ons(i + 1) = table1 + "." + cols(i) + " = " + table2 + "." + cols(i)
+    }
+    "(" + ons.mkString(" AND ") + ")"
+  }
+  
+  def columns (col: String, cols: String*): String = {
+    var columns = new Array[String](cols.length + 1)
+    columns(0) = col
+    for (i <- 0 until cols.length) {
+      columns(i + 1) = cols(i)
+    }
+    columns.mkString(",")
+  }
 }
