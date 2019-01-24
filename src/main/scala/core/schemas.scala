@@ -11,6 +11,10 @@ import org.apache.spark.sql.types.DateType
 object schemas {
   val ymmtSchema = StructType(
     StructField("vin_prefix", StringType, false) ::
+    StructField("year", StringType, false) ::
+    StructField("make", StringType, false) ::
+    StructField("model", StringType, false) ::
+    StructField("trim", StringType, false) ::
     StructField("ymmt_id", StringType, false) :: Nil
   )
   

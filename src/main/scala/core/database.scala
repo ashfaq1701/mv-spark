@@ -2,12 +2,19 @@ package core
 
 import java.text.SimpleDateFormat
 import java.util.Calendar
+import java.io.File
 
 object database {
   def createDatabase : Unit = {
     if (!session.spark.catalog.databaseExists("salerecords")) {
       session.spark.sql("CREATE DATABASE salerecords")
     }
+  }
+  
+  def deleteDatabase : Unit = {
+    session.spark.sql("DROP DATABASE IF EXISTS salerecords CASCADE")
+    val warehouse = session.spark.conf.get("spark.sql.warehouse.dir").replace("file:", "")
+    globals.deleteFolder(new File(warehouse + "salerecords.db"))
   }
   
   def deleteOlderPartitions : Unit = {

@@ -6,6 +6,7 @@ import org.apache.spark.sql.types.IntegerType
 import org.apache.spark.sql.types.StructField
 import org.apache.spark.sql.types.StringType
 import salerecords.SaleRecords
+import core.session
 import core.database
 
 object SummarySaleRecords {
@@ -25,11 +26,13 @@ object SummarySaleRecords {
       }
     } else if (cmd == "delete") {
       SaleRecords.deleteTable
+    } else if (cmd == "delete_database") {
+      database.deleteDatabase
     } else if (cmd == "show") {
       SaleRecords.showSaleRecordsCount
     } else if (cmd == "delete_partitions") {
       database.deleteOlderPartitions
-    }else {
+    } else {
       println("Wrong action")
       sys.exit(1)
     }
