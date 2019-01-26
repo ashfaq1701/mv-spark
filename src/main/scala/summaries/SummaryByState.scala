@@ -44,7 +44,8 @@ object SummaryByState {
         (max(col("price")) - min(col("price"))).as("price_depriciation_total"),
         (max(col("miles")) - min(col("miles"))).as("miles_depriciation"),
         sum(col("miles")).as("total_miles")).withColumn("month_window", lit(3))
-    threeMonthSummary.show
+    val filteredThreeMonths = threeMonthSummary.filter(col("stdev").isNaN === false)
+    filteredThreeMonths.show
     
     val sixMonthSummary = filteredSixMonthDF.groupBy("ymmt_id", "state")
     .agg(min(col("date")).as("start_date"), 
@@ -58,6 +59,7 @@ object SummaryByState {
         (max(col("price")) - min(col("price"))).as("price_depriciation_total"),
         (max(col("miles")) - min(col("miles"))).as("miles_depriciation"),
         sum(col("miles")).as("total_miles")).withColumn("month_window", lit(6))
-    sixMonthSummary.show
+    val filteredSixMonths = sixMonthSummary.filter(col("stdev").isNaN === false)
+    filteredSixMonths.show
   }
 }
