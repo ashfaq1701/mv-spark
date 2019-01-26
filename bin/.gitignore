@@ -1,0 +1,19 @@
+# Eclipse
+.classpath
+.project
+.settings/
+
+# Intellij
+.idea/
+*.iml
+*.iws
+.cache-main
+# Mac
+.DS_Store
+
+# Maven
+log/
+target/
+
+metastore_db/
+spark-warehouse/

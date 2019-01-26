@@ -8,6 +8,7 @@ import core.session
 import processes.CookDOutlierDetection
 import processes.ZScoreOutlierDetection
 import processes.ModZScoreOutlierDetection
+import export.MysqlExport
 
 object SummaryOverTime {
   def computeSummaryOverTime(dataset: Dataset[SaleRecord], outlierDetection: String = "z_score") : Unit = {
@@ -23,6 +24,6 @@ object SummaryOverTime {
     val summary = filteredDF.groupBy("ymmt_id", "year_month")
     .agg(count(col("*")).as("total_records"), sum(col("price")).as("price_total"))
     .as[models.SummaryOverTime]
-    summary.show
+    MysqlExport.exportSummaryOverTime(summary)
   }
 }

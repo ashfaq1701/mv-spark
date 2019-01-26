@@ -11,7 +11,7 @@ import processes.ModZScoreOutlierDetection
 import org.apache.spark.sql.functions._
 import udfs.Certainty
 import udfs.Regression
-import models.SummaryByState
+import export.MysqlExport
 
 object SummaryByState {
   def computeSummaryByState(dataset: Dataset[SaleRecord], maxSaleDate: Date, outlierDetection: String = "z_score") : Unit = {
@@ -47,7 +47,7 @@ object SummaryByState {
         sum(col("miles")).as("total_miles")).withColumn("month_window", lit(3))
         .as[models.SummaryByState]
     val filteredThreeMonths = threeMonthSummary.filter(col("stdev").isNaN === false)
-    filteredThreeMonths.show
+    MysqlExport.exportSummaryByState(filteredThreeMonths)
     
     val sixMonthSummary = filteredSixMonthDF.groupBy("ymmt_id", "state")
     .agg(min(col("date")).as("start_date"), 
@@ -63,6 +63,6 @@ object SummaryByState {
         sum(col("miles")).as("total_miles")).withColumn("month_window", lit(6))
         .as[models.SummaryByState]
     val filteredSixMonths = sixMonthSummary.filter(col("stdev").isNaN === false)
-    filteredSixMonths.show
+    MysqlExport.exportSummaryByState(filteredSixMonths)
   }
 }
