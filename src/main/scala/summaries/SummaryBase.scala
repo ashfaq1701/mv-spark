@@ -12,6 +12,7 @@ import processes.CookDOutlierDetection
 import processes.ZScoreOutlierDetection
 import processes.ModZScoreOutlierDetection
 import org.apache.spark.sql.Column
+import models.SummaryBase
 
 object SummaryBase {
   def computeSummaryBase(dataset: Dataset[SaleRecord], maxSaleDate: Date, outlierDetection: String = "z_score") : Unit = {
@@ -46,6 +47,7 @@ object SummaryBase {
         (max(col("price")) - min(col("price"))).as("price_depriciation_total"),
         (max(col("miles")) - min(col("miles"))).as("miles_depriciation"),
         sum(col("miles")).as("total_miles")).withColumn("month_window", lit(3))
+        .as[SummaryBase]
     val filteredThreeMonths = threeMonthSummary.filter(col("stdev").isNaN === false)
     filteredThreeMonths.show
         
@@ -61,6 +63,7 @@ object SummaryBase {
         (max(col("price")) - min(col("price"))).as("price_depriciation_total"),
         (max(col("miles")) - min(col("miles"))).as("miles_depriciation"),
         sum(col("miles")).as("total_miles")).withColumn("month_window", lit(6))
+        .as[SummaryBase]
     val filteredSixMonths = sixMonthSummary.filter(col("stdev").isNaN === false)
     filteredSixMonths.show
   }

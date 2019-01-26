@@ -11,6 +11,7 @@ import processes.ModZScoreOutlierDetection
 import org.apache.spark.sql.functions._
 import udfs.Certainty
 import udfs.Regression
+import models.SummaryByState
 
 object SummaryByState {
   def computeSummaryByState(dataset: Dataset[SaleRecord], maxSaleDate: Date, outlierDetection: String = "z_score") : Unit = {
@@ -44,6 +45,7 @@ object SummaryByState {
         (max(col("price")) - min(col("price"))).as("price_depriciation_total"),
         (max(col("miles")) - min(col("miles"))).as("miles_depriciation"),
         sum(col("miles")).as("total_miles")).withColumn("month_window", lit(3))
+        .as[models.SummaryByState]
     val filteredThreeMonths = threeMonthSummary.filter(col("stdev").isNaN === false)
     filteredThreeMonths.show
     
@@ -59,6 +61,7 @@ object SummaryByState {
         (max(col("price")) - min(col("price"))).as("price_depriciation_total"),
         (max(col("miles")) - min(col("miles"))).as("miles_depriciation"),
         sum(col("miles")).as("total_miles")).withColumn("month_window", lit(6))
+        .as[models.SummaryByState]
     val filteredSixMonths = sixMonthSummary.filter(col("stdev").isNaN === false)
     filteredSixMonths.show
   }

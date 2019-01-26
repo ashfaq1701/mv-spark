@@ -22,6 +22,7 @@ object SummaryOverTime {
     }
     val summary = filteredDF.groupBy("ymmt_id", "year_month")
     .agg(count(col("*")).as("total_records"), sum(col("price")).as("price_total"))
+    .as[models.SummaryOverTime]
     summary.show
   }
 }
