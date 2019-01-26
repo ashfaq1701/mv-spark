@@ -17,7 +17,7 @@ object SummarySaleRecords {
     }
     val cmd = args(0)
     if (cmd == "import") {
-       SaleRecords.importRecords("/usr/dump_data");
+       SaleRecords.importRecords("/var/dump_data");
     } else if (cmd == "summary") {
       if (args.length == 2) {
         SaleRecords.summarizeRecords(args(1))
