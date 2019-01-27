@@ -46,8 +46,6 @@ object SummaryByState {
         (max(col("miles")) - min(col("miles"))).as("miles_depriciation"),
         sum(col("miles")).as("total_miles")).withColumn("month_window", lit(3))
         .as[models.SummaryByState]
-    val filteredThreeMonths = threeMonthSummary.filter(col("stdev").isNaN === false)
-    MysqlExport.exportSummaryByState(filteredThreeMonths)
     
     val sixMonthSummary = filteredSixMonthDF.groupBy("ymmt_id", "state")
     .agg(min(col("date")).as("start_date"), 
@@ -62,7 +60,8 @@ object SummaryByState {
         (max(col("miles")) - min(col("miles"))).as("miles_depriciation"),
         sum(col("miles")).as("total_miles")).withColumn("month_window", lit(6))
         .as[models.SummaryByState]
-    val filteredSixMonths = sixMonthSummary.filter(col("stdev").isNaN === false)
-    MysqlExport.exportSummaryByState(filteredSixMonths)
+    val joined = sixMonthSummary.union(threeMonthSummary)
+    val filtered = joined.filter(col("stdev").isNaN === false)
+    MysqlExport.exportSummaryByState(filtered)
   }
 }
