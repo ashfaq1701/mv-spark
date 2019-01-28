@@ -114,6 +114,6 @@ object SaleRecords {
       println("Salerecords table does not exist")
     }
     val warehouse = session.spark.conf.get("spark.sql.warehouse.dir").replace("file:", "")
-    globals.deleteFolder(new File(warehouse + "salerecords.db/salerecords"))
+    globals.deleteFolder(new File(warehouse + "/salerecords.db/salerecords"))
   }
 }

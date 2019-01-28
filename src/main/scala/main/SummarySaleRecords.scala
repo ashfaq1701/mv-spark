@@ -8,6 +8,7 @@ import org.apache.spark.sql.types.StringType
 import salerecords.SaleRecords
 import core.session
 import core.database
+import core.globals
 
 object SummarySaleRecords {
   def main(args: Array[String]): Unit = {
@@ -17,7 +18,7 @@ object SummarySaleRecords {
     }
     val cmd = args(0)
     if (cmd == "import") {
-       SaleRecords.importRecords("/var/dump_data");
+       SaleRecords.importRecords(System.getProperty("user.home") + "/dump_data");
     } else if (cmd == "summary") {
       if (args.length == 2) {
         SaleRecords.summarizeRecords(args(1))

@@ -14,10 +14,11 @@ object database {
   def deleteDatabase : Unit = {
     session.spark.sql("DROP DATABASE IF EXISTS salerecords CASCADE")
     val warehouse = session.spark.conf.get("spark.sql.warehouse.dir").replace("file:", "")
-    globals.deleteFolder(new File(warehouse + "salerecords.db"))
+    globals.deleteFolder(new File(warehouse + "/salerecords.db"))
   }
   
   def deleteOlderPartitions : Unit = {
+    val warehouse = session.spark.conf.get("spark.sql.warehouse.dir").replace("file:", "")
     var dateBeforeSixMonths = Calendar.getInstance()
     dateBeforeSixMonths.add(Calendar.MONTH, -1)
     dateBeforeSixMonths.set(Calendar.DAY_OF_MONTH, dateBeforeSixMonths.getActualMaximum(Calendar.DAY_OF_MONTH))
@@ -36,6 +37,7 @@ object database {
         if (date.before(dateBeforeSixMonths.getTime)) {
           println(s"$partitionName is older than 6 months, deleting partition $partitionName.")
           session.spark.sql(s"ALTER TABLE salerecords.salerecords DROP IF EXISTS PARTITION($col='$ym')")
+          globals.deleteFolder(new File(warehouse + "/salerecords.db/salerecords/" + partitionName))
         }
       }
     })
