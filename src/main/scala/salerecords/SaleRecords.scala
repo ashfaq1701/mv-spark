@@ -86,7 +86,7 @@ object SaleRecords {
     saleRecordsDS.createOrReplaceTempView("tmp_salerecords")
     val maxSaleDate = session.spark.sql("SELECT max(date) from tmp_salerecords").first.getDate(0)
     val uniqueDS = saleRecordsDS.dropDuplicates("vin", "date")
-    val filteredDS = uniqueDS.filter(col("price") > 0 && col("miles")> 50)
+    val filteredDS = uniqueDS.filter(col("price") > 0 && col("miles")> 50 && col("miles") < 3000000)
     session.spark.catalog.dropTempView("tmp_salerecords")
     SummaryBase.computeSummaryBase(filteredDS, maxSaleDate, outlierDetection)
     SummaryByState.computeSummaryByState(filteredDS, maxSaleDate, outlierDetection)
