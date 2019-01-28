@@ -14,6 +14,7 @@ import org.apache.spark.sql.SaveMode
 
 object MysqlExport {
   val mysqlConf = conf.parseMysqlConf
+  Class.forName("com.mysql.cj.jdbc.Driver")
   
   def getJdbcUrl () : String = {
     s"jdbc:mysql://${this.mysqlConf("host")}:${this.mysqlConf("port")}/${this.mysqlConf("database")}"
